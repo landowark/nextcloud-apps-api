@@ -9,6 +9,9 @@ this_dir = Path(__file__).parent
 with open(Path.joinpath(this_dir, "requirements.txt").__str__(), "r") as fp:
     requirements = [line.strip() for line in fp.readlines()]
 
+with open(Path.joinpath(this_dir, ".gitignore").__str__(), "r") as fp:
+    ignores = [thing.strip().replace("/", "") for thing in fp.readlines()]
+
 # Setting up
 setup(
     # the name must match the folder name 'verysimplemodule'
@@ -18,7 +21,7 @@ setup(
     author_email="<lando.wark@gmail.com>",
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
-    packages=find_packages(),
+    packages=find_packages(exclude=ignores),
     install_requires=requirements,  # add any additional packages that
     # needs to be installed along with your package. Eg: 'caer'
 
