@@ -17,7 +17,8 @@ updated = nc.put_note(new_note['notes']['id'], title="Oops", content="Better con
 deleted = nc.delete_note(new_note['notes']['id'])
 ```
 
-<h3>Bookmarks</h3>
+<h3>Bookmarks:</h3>
+
 ```python
 from nextcloud_apps_api import BookmarkClient
 
