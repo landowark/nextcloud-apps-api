@@ -21,7 +21,7 @@ setup(
     author_email="<lando.wark@gmail.com>",
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
-    packages=find_packages(exclude=ignores),
+    packages=find_packages(),
     install_requires=requirements,  # add any additional packages that
     # needs to be installed along with your package. Eg: 'caer'
 
