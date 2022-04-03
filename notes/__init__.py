@@ -1,6 +1,7 @@
 import warnings
 import aiohttp
 import asyncio
+from utils.templates import *
 
 
 class NotesClient:

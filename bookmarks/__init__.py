@@ -1,6 +1,7 @@
 
 import aiohttp
 import asyncio
+from utils.templates import *
 
 
 class BookmarkClient:
