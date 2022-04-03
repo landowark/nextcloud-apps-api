@@ -1,7 +1,7 @@
 import warnings
 import aiohttp
 import asyncio
-from utils.templates import *
+from nextcloud_apps_api.utils.templates import *
 
 
 class NotesClient:

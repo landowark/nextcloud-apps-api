@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from pathlib import Path
 
-VERSION = '0.0.1'
+VERSION = '0.0.2'
 DESCRIPTION = 'API interface to popular nextcloud apps.'
 LONG_DESCRIPTION = 'Nexcloud Notes & Bookmarks API'
 this_dir = Path(__file__).parent
