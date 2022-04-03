@@ -9,9 +9,6 @@ this_dir = Path(__file__).parent
 with open(Path.joinpath(this_dir, "requirements.txt").__str__(), "r") as fp:
     requirements = [line.strip() for line in fp.readlines()]
 
-with open(Path.joinpath(this_dir, ".gitignore").__str__(), "r") as fp:
-    ignores = [thing.strip().replace("/", "") for thing in fp.readlines()]
-
 # Setting up
 setup(
     # the name must match the folder name 'verysimplemodule'
