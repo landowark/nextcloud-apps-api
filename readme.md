@@ -6,6 +6,7 @@ This package is meant to add a python interface for popular nextcloud apps. Curr
 - Bookmarks
 
 <h3>Notes:</h3>
+
 ```python
 from nextcloud_apps_api import NotesClient
 
