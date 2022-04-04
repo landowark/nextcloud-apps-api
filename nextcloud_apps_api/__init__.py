@@ -1,2 +1,2 @@
-from nextcloud_apps_api.notes import NotesAsyncClient, NotesClient
-from nextcloud_apps_api.bookmarks import BookmarkAsyncClient, BookmarkClient
+from nextcloud_apps_api.notes import NotesClient
+from nextcloud_apps_api.bookmarks import BookmarkClient

@@ -212,7 +212,7 @@ class BookmarkClient:
         :return: Json of bookmarks
         """
         # ssl_ctx = ssl.create_default_context(cafile=certifi.where())
-        conn = aiohttp.TCPConnector(ssl=self.ssl)
+        # conn = aiohttp.TCPConnector(ssl=self.ssl)
         endpoint = f"/index.php/apps/bookmarks/public/rest/v2/bookmark{query}"
         headers = {"Accept": "application/json"}
         with requests.Session() as session:
