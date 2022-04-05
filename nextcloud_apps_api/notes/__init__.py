@@ -23,9 +23,9 @@ class NotesAsyncClient:
         acceptable_params = ['category', 'exclude', 'pruneBefore', 'chunkSize', 'chunkCursor']
         params = {key:kwargs[key] for key in kwargs.keys() if key in acceptable_params}
         if id_:
-            id_ = f"/{id_}"
+            id_ = f"/notes/{id_}"
         else:
-            id_ = ""
+            id_ = "/notes"
         if not "exclude" in params:
             warnings.warn("--Not excluding content could lead to too much data returning and a gateway timeout! Please consider using 'exclude=[\'content\']'--")
         else:
@@ -33,7 +33,7 @@ class NotesAsyncClient:
                 warnings.warn(
                     "--Not excluding content could lead to too much data returning and a gateway timeout! Please consider using 'exclude=[\'content\']'--")
         query_string = id_ + notes_template.render(params=params)
-        status, notes = self.loop.run_until_complete(self.__async_notes("GET", query_string))
+        status, notes = self.loop.run_until_complete(self.__async_notes(caller="GET", query=query_string))
         if status == 404:
             return None
         elif status == 200:
@@ -48,12 +48,13 @@ class NotesAsyncClient:
         :param category: Folder to post the note to. Defaults to "".
         :return: Response result.
         """
+        query_string = "/notes"
         body = {
             "title": title,
             "content": content,
             "category": category
         }
-        status, notes = self.loop.run_until_complete(self.__async_notes("POST", body=body))
+        status, notes = self.loop.run_until_complete(self.__async_notes(caller="POST", query=query_string, body=body))
         return {"status": status, "notes": notes}
 
     def put_note(self, id_: int, **kwargs):
@@ -65,8 +66,8 @@ class NotesAsyncClient:
         """
         acceptable_params = ['title', 'content', 'category']
         body = {k: kwargs[k] for k in acceptable_params if k in kwargs}
-        query_string = f"/{id_}"
-        status, notes = self.loop.run_until_complete(self.__async_notes("PUT", query=query_string, body=body))
+        query_string = f"/notes/{id_}"
+        status, notes = self.loop.run_until_complete(self.__async_notes(caller="PUT", query=query_string, body=body))
         return {"status": status, "notes": notes}
 
     def delete_note(self, id_:int):
@@ -75,16 +76,18 @@ class NotesAsyncClient:
         :param id_: ID of the note to update
         :return:
         """
-        query_string = f"/{id_}"
-        status, notes = self.loop.run_until_complete(self.__async_notes("DELETE", query=query_string))
+        query_string = f"/notes/{id_}"
+        status, notes = self.loop.run_until_complete(self.__async_notes(caller="DELETE", query=query_string))
         return {"status": status, "notes": notes}
 
     def get_settings(self):
-        status, settings = self.loop.run_until_complete(self.__async_settings("GET"))
+        query_string = "/settings"
+        status, settings = self.loop.run_until_complete(self.__async_notes(caller="GET", query=query_string))
         return {"status": status, "settings": settings}
 
     def put_settings(self, **kwargs):
-        status, settings = self.loop.run_until_complete(self.__async_settings("PUT", kwargs))
+        query_string = "/settings"
+        status, settings = self.loop.run_until_complete(self.__async_notes(caller="PUT", body=kwargs, query=query_string))
         return {"status": status, "settings": settings}
 
     async def __async_notes(self, caller: str, query: str = "", body:dict = {}):
@@ -97,55 +100,14 @@ class NotesAsyncClient:
         """
         # ssl_ctx = ssl.create_default_context(cafile=certifi.where())
         conn = aiohttp.TCPConnector(ssl=self.ssl)
-        endpoint = f"/index.php/apps/notes/api/v1/notes{query}"
+        endpoint = f"/index.php/apps/notes/api/v1{query}"
         headers = {"Accept": "application/json"}
         async with aiohttp.ClientSession(connector=conn) as session:
-            if caller == "GET":
-                async with session.get(self.host + endpoint,
-                                       auth=self.authorize, headers=headers) as response:
-                    status = response.status
-                    notes = await response.json()
-            elif caller == "POST":
-                async with session.post(self.host + endpoint,
+            async with session.request(caller, self.host + endpoint,
                                        auth=self.authorize, headers=headers, data=body) as response:
-                    status = response.status
-                    notes = await response.json()
-            elif caller == "PUT":
-                async with session.put(self.host + endpoint,
-                                       auth=self.authorize, headers=headers, data=body) as response:
-                    status = response.status
-                    notes = await response.json()
-            elif caller == "DELETE":
-                async with session.delete(self.host + endpoint,
-                                       auth=self.authorize, headers=headers) as response:
-                    status = response.status
-                    notes = await response.json()
+                status = response.status
+                notes = await response.json()
         return status, notes
-
-    async def __async_settings(self, caller: str, body: dict={}):
-        """
-        Asynchronous request to notes api.
-        :param caller: function calling this method.
-        :param body: Settings to be changed.
-        :return: Json of notes
-        """
-        # ssl_ctx = ssl.create_default_context(cafile=certifi.where())
-        conn = aiohttp.TCPConnector(ssl=self.ssl)
-        endpoint = f"/index.php/apps/notes/api/v1/settings"
-        headers = {"Accept": "application/json"}
-        async with aiohttp.ClientSession(connector=conn) as session:
-            if caller == "GET":
-                async with session.get(self.host + endpoint,
-                                       auth=self.authorize, headers=headers) as response:
-                    status = response.status
-                    settings = await response.json()
-            elif caller == "PUT":
-                async with session.put(self.host + endpoint,
-                                       auth=self.authorize, headers=headers, data=body) as response:
-                    status = response.status
-                    settings = await response.json()
-        return status, settings
-
 
 
 class NotesClient:
@@ -153,7 +115,6 @@ class NotesClient:
     def __init__(self, host: str, username: str = "", password: str = "", ssl: bool = True):
         self.host = host
         self.authorize = requests.auth.HTTPBasicAuth(username, password)
-        # self.loop = asyncio.get_event_loop()
         self.ssl = ssl
 
     def get_notes(self, id_: int = None, **kwargs):
@@ -166,9 +127,9 @@ class NotesClient:
         acceptable_params = ['category', 'exclude', 'pruneBefore', 'chunkSize', 'chunkCursor']
         params = {key:kwargs[key] for key in kwargs.keys() if key in acceptable_params}
         if id_:
-            id_ = f"/{id_}"
+            id_ = f"/notes/{id_}"
         else:
-            id_ = ""
+            id_ = "/notes"
         if not "exclude" in params:
             warnings.warn("--Not excluding content could lead to too much data returning and a gateway timeout! Please consider using 'exclude=[\'content\']'--")
         else:
@@ -176,13 +137,12 @@ class NotesClient:
                 warnings.warn(
                     "--Not excluding content could lead to too much data returning and a gateway timeout! Please consider using 'exclude=[\'content\']'--")
         query_string = id_ + notes_template.render(params=params)
-        status, notes = self.__notes("GET", query_string)
+        status, notes = self.__notes(caller="GET", query=query_string)
         if status == 404:
             return None
         elif status == 200:
             return {"status": status, "notes":notes}
-        # notes = self.__notes("GET", query_string)
-        # return notes
+
 
     def post_note(self, title: str, content: str, category: str = ""):
         """
@@ -192,12 +152,13 @@ class NotesClient:
         :param category: Folder to post the note to. Defaults to "".
         :return: Response result.
         """
+        query_string = "/notes"
         body = {
             "title": title,
             "content": content,
             "category": category
         }
-        status, notes = self.__notes("POST", body=body)
+        status, notes = self.__notes(caller="POST", query=query_string, body=body)
         return {"status": status, "notes": notes}
 
     def put_note(self, id_: int, **kwargs):
@@ -209,8 +170,8 @@ class NotesClient:
         """
         acceptable_params = ['title', 'content', 'category']
         body = {k: kwargs[k] for k in acceptable_params if k in kwargs}
-        query_string = f"/{id_}"
-        status, notes = self.__notes("PUT", query=query_string, body=body)
+        query_string = f"/notes/{id_}"
+        status, notes = self.__notes(caller="PUT", query=query_string, body=body)
         return {"status": status, "notes": notes}
 
     def delete_note(self, id_:int):
@@ -219,16 +180,18 @@ class NotesClient:
         :param id_: ID of the note to update
         :return:
         """
-        query_string = f"/{id_}"
-        status, notes = self.__notes("DELETE", query=query_string)
+        query_string = f"/notes/{id_}"
+        status, notes = self.__notes(caller="DELETE", query=query_string)
         return {"status": status, "notes": notes}
 
     def get_settings(self):
-        status, settings = self.__settings("GET")
+        query_string = "/settings"
+        status, settings = self.__notes(caller="GET", query=query_string)
         return {"status": status, "settings": settings}
 
     def put_settings(self, **kwargs):
-        status, settings = self.__settings("PUT", kwargs)
+        query_string = "/settings"
+        status, settings = self.__notes(caller="PUT", body=kwargs, query=query_string)
         return {"status": status, "settings": settings}
 
     def __notes(self, caller: str, query: str = "", body:dict = {}):
@@ -239,55 +202,13 @@ class NotesClient:
         :param body: Dict of values for making note.
         :return: Json of notes
         """
-        # ssl_ctx = ssl.create_default_context(cafile=certifi.where())
 
-        # conn = aiohttp.TCPConnector(ssl=self.ssl)
-        endpoint = f"/index.php/apps/notes/api/v1/notes{query}"
+        endpoint = f"/index.php/apps/notes/api/v1{query}"
+        print(endpoint)
         headers = {"Accept": "application/json"}
         with requests.Session() as session:
-            if caller == "GET":
-                with session.get(self.host + endpoint,
-                                       auth=self.authorize, headers=headers, verify=self.ssl) as response:
-                    status = response.status_code
-                    notes = response.json()
-            elif caller == "POST":
-                with session.post(self.host + endpoint,
+            with session.request(caller, self.host + endpoint,
                                        auth=self.authorize, headers=headers, data=body, verify=self.ssl) as response:
-                    status = response.status_code
-                    notes = response.json()
-            elif caller == "PUT":
-                with session.put(self.host + endpoint,
-                                       auth=self.authorize, headers=headers, data=body, verify=self.ssl) as response:
-                    status = response.status_code
-                    notes = response.json()
-            elif caller == "DELETE":
-                with session.delete(self.host + endpoint,
-                                       auth=self.authorize, headers=headers, verify=self.ssl) as response:
-                    status = response.status_code
-                    notes = response.json()
+                status = response.status_code
+                notes = response.json()
         return status, notes
-        # return notes
-
-    def __settings(self, caller: str, body: dict={}):
-        """
-        Asynchronous request to notes api.
-        :param caller: function calling this method.
-        :param body: Settings to be changed.
-        :return: Json of notes
-        """
-        # ssl_ctx = ssl.create_default_context(cafile=certifi.where())
-        # conn = aiohttp.TCPConnector(ssl=self.ssl)
-        endpoint = f"/index.php/apps/notes/api/v1/settings"
-        headers = {"Accept": "application/json"}
-        with requests.Session() as session:
-            if caller == "GET":
-                with session.get(self.host + endpoint,
-                                       auth=self.authorize, headers=headers, verify=self.ssl) as response:
-                    status = response.status
-                    settings = response.json()
-            elif caller == "PUT":
-                with session.put(self.host + endpoint,
-                                       auth=self.authorize, headers=headers, data=body, verify=self.ssl) as response:
-                    status = response.status
-                    settings = response.json()
-        return status, settings
