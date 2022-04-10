@@ -43,7 +43,7 @@ class NotesAsyncClient:
                 warnings.warn(
                     "--Not excluding content could lead to too much data returning and a gateway timeout! Please consider using 'exclude=[\'content\']'--")
         query_string = id_ + notes_template.render(params=params)
-        status, notes = self.loop.create_task(self.__async_notes(caller="GET", query=query_string), name="Get Notes")
+        status, notes = asyncio.run_coroutine_threadsafe(self.__async_notes(caller="GET", query=query_string), self.loop)
         if status == 404:
             return None
         elif status == 200:
@@ -64,7 +64,7 @@ class NotesAsyncClient:
             "content": content,
             "category": category
         }
-        status, notes = self.loop.create_task(self.__async_notes(caller="POST", query=query_string, body=body), name="Post Note")
+        status, notes = asyncio.run_coroutine_threadsafe(self.__async_notes(caller="POST", query=query_string, body=body), self.loop)
         return {"status": status, "notes": notes}
 
     def put_note(self, id_: int, **kwargs):
@@ -77,7 +77,7 @@ class NotesAsyncClient:
         acceptable_params = ['title', 'content', 'category']
         body = {k: kwargs[k] for k in acceptable_params if k in kwargs}
         query_string = f"/notes/{id_}"
-        status, notes = self.loop.create_task(self.__async_notes(caller="PUT", query=query_string, body=body), name="Put Note")
+        status, notes = asyncio.run_coroutine_threadsafe(self.__async_notes(caller="PUT", query=query_string, body=body), self.loop)
         return {"status": status, "notes": notes}
 
     def delete_note(self, id_:int):
@@ -87,17 +87,17 @@ class NotesAsyncClient:
         :return:
         """
         query_string = f"/notes/{id_}"
-        status, notes = self.loop.create_task(self.__async_notes(caller="DELETE", query=query_string), name="Delete Note")
+        status, notes = asyncio.run_coroutine_threadsafe(self.__async_notes(caller="DELETE", query=query_string), self.loop)
         return {"status": status, "notes": notes}
 
     def get_settings(self):
         query_string = "/settings"
-        status, settings = self.loop.create_task(self.__async_notes(caller="GET", query=query_string), name="Get Settings")
+        status, settings = asyncio.run_coroutine_threadsafe(self.__async_notes(caller="GET", query=query_string), self.loop)
         return {"status": status, "settings": settings}
 
     def put_settings(self, **kwargs):
         query_string = "/settings"
-        status, settings = self.loop.create_task(self.__async_notes(caller="PUT", body=kwargs, query=query_string), name="Put Settings")
+        status, settings = asyncio.run_coroutine_threadsafe(self.__async_notes(caller="PUT", body=kwargs, query=query_string), self.loop)
         return {"status": status, "settings": settings}
 
     async def __async_notes(self, caller: str, query: str = "", body:dict = {}):

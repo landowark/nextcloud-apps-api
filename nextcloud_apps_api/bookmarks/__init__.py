@@ -37,7 +37,7 @@ class BookmarkAsyncClient:
         else:
             id_ = ""
         query_string = id_ + bookmarks_template.render(params=params)
-        response = self.loop.create_task(self.__async_bookmarks("GET", query_string), name="Get Bookmarks")
+        response = asyncio.run_coroutine_threadsafe(self.__async_bookmarks("GET", query_string), self.loop)
         try:
             return {"status":response[0], "bookmarks":response[1]['data']}
         except KeyError:
@@ -60,7 +60,7 @@ class BookmarkAsyncClient:
             "title": title,
             "description": description,
         }
-        status, bookmark = self.loop.create_task(self.__async_bookmarks("POST", query=query_string, body=body), name="Post Bookmark")
+        status, bookmark = asyncio.run_coroutine_threadsafe(self.__async_bookmarks("POST", query=query_string, body=body), self.loop)
         return {"status": status, "bookmark": bookmark['item']}
 
     def put_bookmark(self, id_: int, **kwargs):
@@ -73,7 +73,7 @@ class BookmarkAsyncClient:
         acceptable_params = ['tags,', 'title', 'description', 'folder']
         body = {k: kwargs[k] for k in acceptable_params if k in kwargs}
         query_string = f"/{id_}"
-        status, bookmark = self.loop.create_task(self.__async_bookmarks("PUT", query=query_string, body=body), name="Put Bookmark")
+        status, bookmark = asyncio.run_coroutine_threadsafe(self.__async_bookmarks("PUT", query=query_string, body=body), self.loop)
         return {"status": status, "bookmark": bookmark['item']}
 
     def delete_bookmark(self, id_):
@@ -82,7 +82,7 @@ class BookmarkAsyncClient:
         :return: status of delete request.
         '''
         query_string = f"/{id_}"
-        status, bookmarks = self.loop.create_task(self.__async_bookmarks("DELETE", query=query_string), name="Delete Bookmark")
+        status, bookmarks = asyncio.run_coroutine_threadsafe(self.__async_bookmarks("DELETE", query=query_string), self.loop)
         return {"status": status}
 
     def export_bookmarks(self):
@@ -90,7 +90,7 @@ class BookmarkAsyncClient:
         :return: Bookmarks in html format
         '''
         query_string = "/export"
-        status, bookmarks = self.loop.create_task(self.__async_bookmarks("EXPORT", query_string), name="Export Bookmark")
+        status, bookmarks = asyncio.run_coroutine_threadsafe(self.__async_bookmarks("EXPORT", query_string), self.loop)
         return {"status":status, "bookmark":bookmarks}
 
 
