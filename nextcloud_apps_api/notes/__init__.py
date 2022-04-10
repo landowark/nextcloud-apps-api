@@ -10,7 +10,8 @@ class NotesAsyncClient:
     def __init__(self, host: str, username: str = "", password: str = "", ssl: bool = True):
         self.host = host
         self.authorize = aiohttp.BasicAuth(username, password)
-        self.loop = self.get_or_create_eventloop()
+        # self.loop = self.get_or_create_eventloop()
+        self.loop = asyncio.new_event_loop()
         self.ssl = ssl
 
     def get_or_create_eventloop(self):
