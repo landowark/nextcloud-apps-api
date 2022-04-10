@@ -11,7 +11,7 @@ class BookmarkAsyncClient:
         self.host = host
         self.authorize = aiohttp.BasicAuth(username, password)
         # self.loop = self.get_or_create_eventloop()
-        self.loop = asyncio.new_event_loop()
+        self.loop = asyncio.get_running_loop()
         self.ssl = ssl
 
     def get_or_create_eventloop(self):
