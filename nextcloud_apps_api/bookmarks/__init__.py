@@ -10,8 +10,17 @@ class BookmarkAsyncClient:
     def __init__(self, host: str, username: str = "", password: str = "", ssl: bool = True):
         self.host = host
         self.authorize = aiohttp.BasicAuth(username, password)
-        self.loop = asyncio.get_event_loop()
+        self.loop = self.get_or_create_eventloop()
         self.ssl = ssl
+
+    def get_or_create_eventloop():
+        try:
+            return asyncio.get_event_loop()
+        except RuntimeError as ex:
+            if "There is no current event loop in thread" in str(ex):
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                return asyncio.get_event_loop()
 
     def get_bookmarks(self, id_: int = None, **kwargs):
         '''
