@@ -23,7 +23,7 @@ class NotesAsyncClient:
                 asyncio.set_event_loop(loop)
                 return asyncio.get_event_loop()
 
-    def get_notes(self, id_: int = None, **kwargs):
+    async def get_notes(self, id_: int = None, **kwargs):
         """
         Get a list of notes with specified parameters.
         :param id_: (optional) the id of the desired note. Defaults to None.
@@ -43,14 +43,14 @@ class NotesAsyncClient:
                 warnings.warn(
                     "--Not excluding content could lead to too much data returning and a gateway timeout! Please consider using 'exclude=[\'content\']'--")
         query_string = id_ + notes_template.render(params=params)
-        status, notes = asyncio.run_coroutine_threadsafe(self.__async_notes(caller="GET", query=query_string), self.loop)
+        status, notes = await self.__async_notes(caller="GET", query=query_string)
         if status == 404:
             return None
         elif status == 200:
             return {"status": status, "notes":notes}
 
 
-    def post_note(self, title: str, content: str, category: str = ""):
+    async def post_note(self, title: str, content: str, category: str = ""):
         """
         Post a note to the api
         :param title: Desired title of the note.
@@ -64,10 +64,10 @@ class NotesAsyncClient:
             "content": content,
             "category": category
         }
-        status, notes = asyncio.run_coroutine_threadsafe(self.__async_notes(caller="POST", query=query_string, body=body), self.loop)
+        status, notes = await self.__async_notes(caller="POST", query=query_string, body=body)
         return {"status": status, "notes": notes}
 
-    def put_note(self, id_: int, **kwargs):
+    async def put_note(self, id_: int, **kwargs):
         """
         Update note on the server.
         :param id_: ID of the note to update
@@ -77,27 +77,27 @@ class NotesAsyncClient:
         acceptable_params = ['title', 'content', 'category']
         body = {k: kwargs[k] for k in acceptable_params if k in kwargs}
         query_string = f"/notes/{id_}"
-        status, notes = asyncio.run_coroutine_threadsafe(self.__async_notes(caller="PUT", query=query_string, body=body), self.loop)
+        status, notes = await self.__async_notes(caller="PUT", query=query_string, body=body)
         return {"status": status, "notes": notes}
 
-    def delete_note(self, id_:int):
+    async def delete_note(self, id_:int):
         """
         Delete note from the server.
         :param id_: ID of the note to update
         :return:
         """
         query_string = f"/notes/{id_}"
-        status, notes = asyncio.run_coroutine_threadsafe(self.__async_notes(caller="DELETE", query=query_string), self.loop)
+        status, notes = await self.__async_notes(caller="DELETE", query=query_string)
         return {"status": status, "notes": notes}
 
-    def get_settings(self):
+    async def get_settings(self):
         query_string = "/settings"
-        status, settings = asyncio.run_coroutine_threadsafe(self.__async_notes(caller="GET", query=query_string), self.loop)
+        status, settings = await self.__async_notes(caller="GET", query=query_string)
         return {"status": status, "settings": settings}
 
-    def put_settings(self, **kwargs):
+    async def put_settings(self, **kwargs):
         query_string = "/settings"
-        status, settings = asyncio.run_coroutine_threadsafe(self.__async_notes(caller="PUT", body=kwargs, query=query_string), self.loop)
+        status, settings = await self.__async_notes(caller="PUT", body=kwargs, query=query_string)
         return {"status": status, "settings": settings}
 
     async def __async_notes(self, caller: str, query: str = "", body:dict = {}):
