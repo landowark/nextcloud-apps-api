@@ -37,11 +37,11 @@ class BookmarkAsyncClient:
         else:
             id_ = ""
         query_string = id_ + bookmarks_template.render(params=params)
-        response = asyncio.run_coroutine_threadsafe(self.__async_bookmarks("GET", query_string), self.loop)
+        response = await self.__async_bookmarks("GET", query_string)
         try:
-            return {"status":response[0], "bookmarks":response[1]['data']}
+            return response[0], response[1]['data']
         except KeyError:
-            return {"status":response[0], "bookmarks":response[1]}
+            return response[0], response[1]
 
 
     def post_bookmark(self, url: str, title: str = "", description: str = "", **kwargs):
@@ -60,8 +60,8 @@ class BookmarkAsyncClient:
             "title": title,
             "description": description,
         }
-        status, bookmark = asyncio.run_coroutine_threadsafe(self.__async_bookmarks("POST", query=query_string, body=body), self.loop)
-        return {"status": status, "bookmark": bookmark['item']}
+        status, bookmark = await self.__async_bookmarks("POST", query=query_string, body=body)
+        return status, bookmark['item']
 
     def put_bookmark(self, id_: int, **kwargs):
         """
@@ -73,8 +73,8 @@ class BookmarkAsyncClient:
         acceptable_params = ['tags,', 'title', 'description', 'folder']
         body = {k: kwargs[k] for k in acceptable_params if k in kwargs}
         query_string = f"/{id_}"
-        status, bookmark = asyncio.run_coroutine_threadsafe(self.__async_bookmarks("PUT", query=query_string, body=body), self.loop)
-        return {"status": status, "bookmark": bookmark['item']}
+        status, bookmark = await self.__async_bookmarks("PUT", query=query_string, body=body)
+        return status, bookmark['item']
 
     def delete_bookmark(self, id_):
         '''
@@ -82,8 +82,8 @@ class BookmarkAsyncClient:
         :return: status of delete request.
         '''
         query_string = f"/{id_}"
-        status, bookmarks = asyncio.run_coroutine_threadsafe(self.__async_bookmarks("DELETE", query=query_string), self.loop)
-        return {"status": status}
+        status, bookmarks = await self.__async_bookmarks("DELETE", query=query_string)
+        return status, bookmarks
 
     def export_bookmarks(self):
         '''
@@ -91,7 +91,7 @@ class BookmarkAsyncClient:
         '''
         query_string = "/export"
         status, bookmarks = asyncio.run_coroutine_threadsafe(self.__async_bookmarks("EXPORT", query_string), self.loop)
-        return {"status":status, "bookmark":bookmarks}
+        return status, bookmarks
 
 
     async def __async_bookmarks(self, caller: str, query: str = "", body: dict = {}):

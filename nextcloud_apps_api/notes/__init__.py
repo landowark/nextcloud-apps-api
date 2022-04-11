@@ -47,7 +47,7 @@ class NotesAsyncClient:
         if status == 404:
             return None
         elif status == 200:
-            return {"status": status, "notes":notes}
+            return status, notes
 
 
     async def post_note(self, title: str, content: str, category: str = ""):
@@ -65,7 +65,7 @@ class NotesAsyncClient:
             "category": category
         }
         status, notes = await self.__async_notes(caller="POST", query=query_string, body=body)
-        return {"status": status, "notes": notes}
+        return status, notes
 
     async def put_note(self, id_: int, **kwargs):
         """
@@ -78,7 +78,7 @@ class NotesAsyncClient:
         body = {k: kwargs[k] for k in acceptable_params if k in kwargs}
         query_string = f"/notes/{id_}"
         status, notes = await self.__async_notes(caller="PUT", query=query_string, body=body)
-        return {"status": status, "notes": notes}
+        return status, notes
 
     async def delete_note(self, id_:int):
         """
@@ -88,17 +88,17 @@ class NotesAsyncClient:
         """
         query_string = f"/notes/{id_}"
         status, notes = await self.__async_notes(caller="DELETE", query=query_string)
-        return {"status": status, "notes": notes}
+        return status, notes
 
     async def get_settings(self):
         query_string = "/settings"
         status, settings = await self.__async_notes(caller="GET", query=query_string)
-        return {"status": status, "settings": settings}
+        return status, settings
 
     async def put_settings(self, **kwargs):
         query_string = "/settings"
         status, settings = await self.__async_notes(caller="PUT", body=kwargs, query=query_string)
-        return {"status": status, "settings": settings}
+        return status, settings
 
     async def __async_notes(self, caller: str, query: str = "", body:dict = {}):
         """
