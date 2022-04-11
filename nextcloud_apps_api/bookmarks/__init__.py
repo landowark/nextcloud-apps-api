@@ -23,7 +23,7 @@ class BookmarkAsyncClient:
                 asyncio.set_event_loop(loop)
                 return asyncio.get_event_loop()
 
-    def get_bookmarks(self, id_: int = None, **kwargs):
+    async def get_bookmarks(self, id_: int = None, **kwargs):
         '''
         Gets booksmarks from server
         :param id_: (optional) ID of the desired bookmark. Defaults to None.
@@ -44,7 +44,7 @@ class BookmarkAsyncClient:
             return response[0], response[1]
 
 
-    def post_bookmark(self, url: str, title: str = "", description: str = "", **kwargs):
+    async def post_bookmark(self, url: str, title: str = "", description: str = "", **kwargs):
         '''
         Posts a bookmark to the api.
         :param url: Link to the page of the bookmark
@@ -63,7 +63,7 @@ class BookmarkAsyncClient:
         status, bookmark = await self.__async_bookmarks("POST", query=query_string, body=body)
         return status, bookmark['item']
 
-    def put_bookmark(self, id_: int, **kwargs):
+    async def put_bookmark(self, id_: int, **kwargs):
         """
         Update bookmark on the server.
         :param id_: ID of the bookmark to update
@@ -76,7 +76,7 @@ class BookmarkAsyncClient:
         status, bookmark = await self.__async_bookmarks("PUT", query=query_string, body=body)
         return status, bookmark['item']
 
-    def delete_bookmark(self, id_):
+    async def delete_bookmark(self, id_):
         '''
         :param id_: ID of the bookmark to be deleted.
         :return: status of delete request.
@@ -85,7 +85,7 @@ class BookmarkAsyncClient:
         status, bookmarks = await self.__async_bookmarks("DELETE", query=query_string)
         return status, bookmarks
 
-    def export_bookmarks(self):
+    async def export_bookmarks(self):
         '''
         :return: Bookmarks in html format
         '''
