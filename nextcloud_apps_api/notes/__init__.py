@@ -45,10 +45,7 @@ class NotesAsyncClient:
                     "--Not excluding content could lead to too much data returning and a gateway timeout! Please consider using 'exclude=[\'content\']'--")
         query_string = id_ + notes_template.render(params=params)
         status, notes = await self.__async_notes(caller="GET", query=query_string)
-        if status == 404:
-            return None
-        elif status == 200:
-            return status, notes
+        return status, notes
 
 
     async def post_note(self, title: str, content: str, category: str = ""):

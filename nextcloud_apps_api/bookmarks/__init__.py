@@ -28,11 +28,11 @@ class BookmarkAsyncClient:
         else:
             id_ = ""
         query_string = id_ + bookmarks_template.render(params=params)
-        response = await self.__async_bookmarks(caller="GET", query=query_string)
+        status, response = await self.__async_bookmarks(caller="GET", query=query_string)
         try:
-            return response[0], response[1]['data']
+            return status, response['data']
         except KeyError:
-            return response[0], response[1]
+            return status, response[0]
 
     async def post_bookmark(self, url: str, title: str = "", description: str = "", **kwargs):
         """
@@ -132,11 +132,11 @@ class BookmarkClient:
         else:
             id_ = ""
         query_string = id_ + bookmarks_template.render(params=params)
-        response = self.__bookmarks(caller="GET", query=query_string)
+        status, response = self.__bookmarks(caller="GET", query=query_string)
         try:
-            return response[0], response[1]['data']
+            return status, response['data']
         except KeyError:
-            return response[0], response[1]
+            return status, response[0]
 
     def post_bookmark(self, url: str, title: str = "", description: str = "", **kwargs):
         """
