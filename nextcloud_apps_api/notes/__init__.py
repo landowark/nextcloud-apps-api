@@ -3,6 +3,7 @@ import aiohttp
 import asyncio
 import requests
 from nextcloud_apps_api.utils.templates import *
+from nextcloud_apps_api.utils.custom_exceptions import *
 
 
 class NotesAsyncClient:
@@ -115,9 +116,13 @@ class NotesAsyncClient:
         async with aiohttp.ClientSession(connector=conn) as session:
             async with session.request(caller, self.host + endpoint,
                                        auth=self.authorize, headers=headers, data=body) as response:
+                ok = response.ok
                 status = response.status
                 notes = await response.json()
-        return status, notes
+        if ok:
+            return status, notes
+        else:
+            raise RequestError(f"The server returned a bad response: {status}")
 
 
 class NotesClient:
@@ -148,10 +153,7 @@ class NotesClient:
                     "--Not excluding content could lead to too much data returning and a gateway timeout! Please consider using 'exclude=[\'content\']'--")
         query_string = id_ + notes_template.render(params=params)
         status, notes = self.__notes(caller="GET", query=query_string)
-        if status == 404:
-            return None
-        elif status == 200:
-            return {"status": status, "notes":notes}
+        return status, notes
 
 
     def post_note(self, title: str, content: str, category: str = ""):
@@ -169,7 +171,7 @@ class NotesClient:
             "category": category
         }
         status, notes = self.__notes(caller="POST", query=query_string, body=body)
-        return {"status": status, "notes": notes}
+        return status, notes
 
     def put_note(self, id_: int, **kwargs):
         """
@@ -182,7 +184,7 @@ class NotesClient:
         body = {k: kwargs[k] for k in acceptable_params if k in kwargs}
         query_string = f"/notes/{id_}"
         status, notes = self.__notes(caller="PUT", query=query_string, body=body)
-        return {"status": status, "notes": notes}
+        return status, notes
 
     def delete_note(self, id_:int):
         """
@@ -192,17 +194,17 @@ class NotesClient:
         """
         query_string = f"/notes/{id_}"
         status, notes = self.__notes(caller="DELETE", query=query_string)
-        return {"status": status, "notes": notes}
+        return status, notes
 
     def get_settings(self):
         query_string = "/settings"
         status, settings = self.__notes(caller="GET", query=query_string)
-        return {"status": status, "settings": settings}
+        return status, settings
 
     def put_settings(self, **kwargs):
         query_string = "/settings"
         status, settings = self.__notes(caller="PUT", body=kwargs, query=query_string)
-        return {"status": status, "settings": settings}
+        return status, settings
 
     def __notes(self, caller: str, query: str = "", body:dict = {}):
         """
@@ -219,6 +221,10 @@ class NotesClient:
         with requests.Session() as session:
             with session.request(caller, self.host + endpoint,
                                        auth=self.authorize, headers=headers, data=body, verify=self.ssl) as response:
+                ok = response.ok
                 status = response.status_code
                 notes = response.json()
-        return status, notes
+        if ok:
+            return status, notes
+        else:
+            raise RequestError(f"The server returned a bad response: {status}")
